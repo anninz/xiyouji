@@ -29,14 +29,19 @@ PG.Game.prototype = {
 	create: function () {
         this.stage.backgroundColor = '#182d3b';
 
-        this.players.push(PG.createPlay(0, this));
-        this.players.push(PG.createPlay(1, this));
-        this.players.push(PG.createPlay(2, this));
+        if (this.roomId == 1) {
+          this.players.push(PG.createPlay(0, this));
+          this.players.push(PG.createPlay(1, this));
+          this.players.push(PG.createPlay(2, this));
 
-        this.players[0].updateInfo(PG.playerInfo.uid, PG.playerInfo.username);
+          this.players[0].updateInfo(PG.playerInfo.uid, PG.playerInfo.username);
+          this.createTitleBar();
+
+        } else {
+            this.onRoomMrg();
+        }
         PG.Socket.connect(this.onopen.bind(this), this.onmessage.bind(this), this.onerror.bind(this));
 
-        this.createTitleBar();
 	},
 
 	onopen: function() {
@@ -130,7 +135,7 @@ PG.Game.prototype = {
 
                 this.whoseTurn = this.uidToSeat(winner);
                 function gameOver() {
-                    alert(this.players[this.whoseTurn].isLandlord ? "帅的赢" : "漂亮的赢");  
+                    alert(this.players[this.whoseTurn].isLandlord ? "帅的赢" : "漂亮的赢");
                     this.state.start('MainMenu');
                 }
                 this.game.time.events.add(1000, gameOver, this);
@@ -344,16 +349,17 @@ PG.Game.prototype = {
     },
 
     createTableLayer: function (tables) {
-        tables.push([-1, 0]);
-
-        var group = this.game.add.group();
-        this.game.world.bringToTop(group);
+        //tables.push([-1, 0]);
+        if (this.tablelistgroup != null) {
+          this.tablelistgroup.destroy();
+        }
+        this.tablelistgroup = this.game.add.group();
+        this.game.world.bringToTop(this.tablelistgroup);
         var gc = this.game.make.graphics(0, 0);
         gc.beginFill(0x00000080);
         gc.endFill();
-        group.add(gc);
+        this.tablelistgroup.add(gc);
         var style = {font: "22px Arial", fill: "#fff", align: "center"};
-
         for (var i = 0; i < tables.length; i++) {
             var sx = this.game.world.width * (i%6 + 1)/(6 + 1);
             var sy = this.game.world.height * (Math.floor(i/6) + 1)/(4 + 1);
@@ -361,15 +367,16 @@ PG.Game.prototype = {
             var table = this.game.make.button(sx, sy, 'btn', this.onJoin, this, 'table.png', 'table.png', 'table.png');
             table.anchor.set(0.5, 1);
             table.tableId = tables[i][0];
-            group.add(table);
+            this.tablelistgroup.add(table);
 
             var text = this.game.make.text(sx, sy, '房间:' + tables[i][0] + '人数:' + tables[i][1], style);
             text.anchor.set(0.5, 0);
-            group.add(text);
+            this.tablelistgroup.add(text);
 
-            if (i == tables.length - 1) {
+            /*if (i == tables.length - 1) {
                 text.text = '新建房间';
-            }
+            }*/
+
         }
     },
 
@@ -389,5 +396,96 @@ PG.Game.prototype = {
             this.send_message([PG.Protocol.REQ_JOIN_TABLE, btn.tableId]);
         }
         btn.parent.destroy();
+    },
+
+    onRoomMrg: function () {
+        var style = {
+            font: '24px Arial', fill: '#000', width: 100, padding: 12,
+            borderWidth: 1, borderColor: '#c8c8c8', borderRadius: 2,
+            textAlign: 'center', placeHolder: '玩家人数'
+            // type: PhaserInput.InputType.password
+        };
+        this.game.add.plugin(PhaserInput.Plugin);
+        var startX = (this.game.world.width) / 8;
+        var startY = (this.game.world.height) -80;
+        this.playerNums = this.game.add.inputField(startX, startY, style);
+
+        style.placeHolder = '几副牌';
+        this.pokerNums = this.game.add.inputField(startX + 140, startY, style);
+
+        var style = {font: "22px Arial", fill: "#f00", align: "center"};
+        this.errorText = this.game.add.text(startX + 120, startY - 30, '', style);
+        this.errorText.anchor.set(0.5, 0);
+
+        this.login = this.game.add.button(startX + 380, startY +25, 'btn', this.onRegRoom, this, 'score_2.png', 'score_2.png', 'score_2.png');
+        this.login.anchor.set(0.5);
+    },
+
+    onRmCreateView: function () {
+      this.playerNums.kill();
+      this.playerNums.destroy()
+      this.pokerNums.kill();
+      this.pokerNums.destroy()
+      this.login.kill();
+      this.login.destroy()
+      if (this.tablelistgroup != null) {
+        this.tablelistgroup.destroy();
+      }
+      this.players.push(PG.createPlay(0, this));
+      this.players.push(PG.createPlay(1, this));
+      this.players.push(PG.createPlay(2, this));
+
+      this.players[0].updateInfo(PG.playerInfo.uid, PG.playerInfo.username);
+
+      this.createTitleBar();
+    },
+
+    onRegRoom: function () {
+        if (!this.playerNums.value) {
+            this.playerNums.startFocus();
+            this.errorText.text = '请输入玩家人数';
+            return;
+        }
+        if (this.playerNums.value > 10) {
+            this.playerNums.startFocus();
+            this.errorText.text = '玩家人数太多';
+            return;
+        }
+        if (!this.pokerNums.value) {
+            this.pokerNums.startFocus();
+            this.errorText.text = '请输入需要几副扑克';
+            return;
+        }
+        if (this.pokerNums.value > 4) {
+            this.pokerNums.startFocus();
+            this.errorText.text = '扑克数量太多';
+            return;
+        }
+
+        this.onRmCreateView();
+        this.send_message([PG.Protocol.REQ_NEW_TABLE, [4,2]]);
+        /*var httpRequest = new XMLHttpRequest();
+        var that = this;
+        httpRequest.onreadystatechange = function () {
+            if (httpRequest.readyState === XMLHttpRequest.DONE) {
+                if (httpRequest.status === 200) {
+                    if (httpRequest.responseText == '1') {
+                        that.errorText.text = '该用户名已经被占用';
+                    } else {
+                        PG.playerInfo = JSON.parse(httpRequest.responseText);
+                        that.state.start('MainMenu');
+                    }
+                } else {
+                    console.log('Error:' + httpRequest.status);
+                    that.errorText.text = httpRequest.responseText;
+                }
+            }
+        };
+        httpRequest.open('POST', '/reg', true);
+        httpRequest.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+        httpRequest.setRequestHeader('X-Csrftoken', PG.getCookie("_xsrf"));
+
+        var req = 'username=' + encodeURIComponent(this.username.value) + '&password=' + encodeURIComponent(this.password.value);
+        httpRequest.send(req);*/
     }
 };
