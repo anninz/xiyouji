@@ -17,10 +17,10 @@ class Table(object):
     END = 2
     CLOSED = 3
 
-    def __init__(self, uid, room):
+    def __init__(self, uid, room, playerNums, pokerNums):
         self.uid = uid
         self.room = room
-        self.players = [None, None, None]
+        self.players = [None, None, None, None, None, None, None, None, None, None]
         self.state = 0  # 0 waiting  1 playing 2 end 3 closed
         self.pokers: List[int] = []
         self.multiple = 1
@@ -30,6 +30,8 @@ class Table(object):
         self.whose_turn = 0
         self.last_shot_seat = 0
         self.last_shot_poker = []
+        self.playerNums = playerNums
+        self.pokerNums = pokerNums
         if room.allow_robot:
             IOLoop.current().call_later(0.1, self.ai_join, nth=1)
 
@@ -55,8 +57,7 @@ class Table(object):
                 ps.append((p.uid, p.name))
             else:
                 ps.append((-1, ''))
-
-        response = [Pt.RSP_JOIN_TABLE, self.uid, ps]
+        response = [Pt.RSP_JOIN_TABLE, self.uid, ps, (self.playerNums, self.pokerNums)]
         for player in self.players:
             if player:
                 player.send(response)
@@ -154,7 +155,7 @@ class Table(object):
         return False
 
     def is_full(self):
-        return self.size() == 3
+        return self.size() == self.playerNums
 
     def is_empty(self):
         return self.size() == 0

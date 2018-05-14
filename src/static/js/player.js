@@ -1,9 +1,16 @@
 PG.createPlay = function (seat, game) {
     var player = seat == 0 ? new PG.Player(seat, game) : new PG.NetPlayer(seat, game);
     var xy = [
-        PG.PW / 2, game.world.height - PG.PH - 10,
-        game.world.width - PG.PW / 2, 94,
-        PG.PW / 2, 94
+        PG.PW / 2, game.world.height - PG.PH + 40,
+        game.world.width - PG.PW / 2, 110,
+        PG.PW / 2, 110,
+        game.world.width - 630, 110,
+        game.world.width - PG.PW / 2, 364,
+        PG.PW / 2 , 364,
+        240 , 110,
+        game.world.width - 435, 110,
+        435 , 110,
+        game.world.width - 240, 110,
     ];
     player.initUI(xy[seat * 2], xy[seat * 2 + 1]);
     if (seat == 0) {
@@ -45,7 +52,7 @@ PG.Player.prototype.initShotLayer = function () {
     this.shotLayer = this.game.add.group();
     var group = this.shotLayer;
 
-    var sy = this.game.world.height * 0.6;
+    var sy = this.game.world.height * 0.7;
     var pass = this.game.make.button(0, sy, "btn", this.onPass, this, 'pass.png', 'pass.png', 'pass.png');
     pass.anchor.set(0.5, 0);
     group.add(pass);

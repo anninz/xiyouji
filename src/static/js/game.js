@@ -28,7 +28,7 @@ PG.Game.prototype = {
 
 	create: function () {
         this.stage.backgroundColor = '#182d3b';
-
+        this.needLoadPlayers = 0;
         if (this.roomId == 1) {
           this.players.push(PG.createPlay(0, this));
           this.players.push(PG.createPlay(1, this));
@@ -38,6 +38,7 @@ PG.Game.prototype = {
           this.createTitleBar();
 
         } else {
+            this.needLoadPlayers = 1;
             this.onRoomMrg();
         }
         PG.Socket.connect(this.onopen.bind(this), this.onmessage.bind(this), this.onerror.bind(this));
@@ -76,14 +77,27 @@ PG.Game.prototype = {
                 break;
 	        case PG.Protocol.RSP_JOIN_TABLE:
                 this.tableId = packet[1];
+                this.playerNums = packet[3][0];
+                this.pokerNums = packet[3][1];
+                if (this.needLoadPlayers) {
+                  this.onRmCreateView();
+                  this.onInitPlayers(this.playerNums);
+                }
                 this.titleBar.text = '房间:' + this.tableId;
                 var playerIds = packet[2];
+                //console.log('RSP_JOIN_TABLE  '+ this.playerNums + '-----' + this.pokerNums +'----'+playerIds);
                 for (var i = 0; i < playerIds.length; i++) {
                     if (playerIds[i][0] == this.players[0].uid) {
-                        var info_1 = playerIds[(i+1)%3];
+                        for (var j = 1; j < this.playerNums; j++) {
+                        //console.log('RSP_JOIN_TABLE  '+ ((i+ j)%this.playerNums));
+                          var info_1 = playerIds[(i+ j)%this.playerNums];
+                          this.players[j].updateInfo(info_1[0], info_1[1]);
+                        }
+
+                        /*var info_1 = playerIds[(i+1)%3];
                         var info_2 = playerIds[(i+2)%3];
                         this.players[1].updateInfo(info_1[0], info_1[1]);
-                        this.players[2].updateInfo(info_2[0], info_2[1]);
+                        this.players[2].updateInfo(info_2[0], info_2[1]);*/
                         break;
                     }
                 }
@@ -408,10 +422,10 @@ PG.Game.prototype = {
         this.game.add.plugin(PhaserInput.Plugin);
         var startX = (this.game.world.width) / 8;
         var startY = (this.game.world.height) -80;
-        this.playerNums = this.game.add.inputField(startX, startY, style);
+        this.inputPlayerNums = this.game.add.inputField(startX, startY, style);
 
         style.placeHolder = '几副牌';
-        this.pokerNums = this.game.add.inputField(startX + 140, startY, style);
+        this.inputPokerNums = this.game.add.inputField(startX + 140, startY, style);
 
         var style = {font: "22px Arial", fill: "#f00", align: "center"};
         this.errorText = this.game.add.text(startX + 120, startY - 30, '', style);
@@ -422,18 +436,22 @@ PG.Game.prototype = {
     },
 
     onRmCreateView: function () {
-      this.playerNums.kill();
-      this.playerNums.destroy()
-      this.pokerNums.kill();
-      this.pokerNums.destroy()
+      this.inputPlayerNums.kill();
+      this.inputPlayerNums.destroy()
+      this.inputPokerNums.kill();
+      this.inputPokerNums.destroy()
       this.login.kill();
       this.login.destroy()
       if (this.tablelistgroup != null) {
         this.tablelistgroup.destroy();
       }
-      this.players.push(PG.createPlay(0, this));
-      this.players.push(PG.createPlay(1, this));
-      this.players.push(PG.createPlay(2, this));
+    },
+
+    onInitPlayers: function (playerNums) {
+      this.needLoadPlayers = 0;
+      for (var i = 0; i < playerNums; i++) {
+        this.players.push(PG.createPlay(i, this));
+      }
 
       this.players[0].updateInfo(PG.playerInfo.uid, PG.playerInfo.username);
 
@@ -441,29 +459,28 @@ PG.Game.prototype = {
     },
 
     onRegRoom: function () {
-        if (!this.playerNums.value) {
-            this.playerNums.startFocus();
+        if (!this.inputPlayerNums.value) {
+            this.inputPlayerNums.startFocus();
             this.errorText.text = '请输入玩家人数';
             return;
         }
-        if (this.playerNums.value > 10) {
-            this.playerNums.startFocus();
+        if (this.inputPlayerNums.value > 10) {
+            this.inputPlayerNums.startFocus();
             this.errorText.text = '玩家人数太多';
             return;
         }
-        if (!this.pokerNums.value) {
-            this.pokerNums.startFocus();
+        if (!this.inputPokerNums.value) {
+            this.inputPokerNums.startFocus();
             this.errorText.text = '请输入需要几副扑克';
             return;
         }
-        if (this.pokerNums.value > 4) {
-            this.pokerNums.startFocus();
+        if (this.inputPokerNums.value > 4) {
+            this.inputPokerNums.startFocus();
             this.errorText.text = '扑克数量太多';
             return;
         }
 
-        this.onRmCreateView();
-        this.send_message([PG.Protocol.REQ_NEW_TABLE, [4,2]]);
+        this.send_message([PG.Protocol.REQ_NEW_TABLE, this.inputPlayerNums.value, this.inputPokerNums.value]);
         /*var httpRequest = new XMLHttpRequest();
         var that = this;
         httpRequest.onreadystatechange = function () {

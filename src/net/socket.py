@@ -76,7 +76,7 @@ class SocketHandler(WebSocketHandler):
 
         elif code == Pt.REQ_NEW_TABLE:
             # TODO: check player was already in table.
-            table = self.room.new_table()
+            table = self.room.new_table(packet[1],packet[2])
             self.player.join_table(table)
             logger.info('PLAYER[%s] NEW TABLE[%d]', self.uid, table.uid)
             self.write_message([Pt.RSP_NEW_TABLE, table.uid])
@@ -142,5 +142,3 @@ class SocketHandler(WebSocketHandler):
         logger.info('sending message to %d waiters', len(cls.waiters))
         for waiter in cls.waiters:
             waiter.write_message('tornado:' + chat)
-
-

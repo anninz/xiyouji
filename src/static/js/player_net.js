@@ -99,13 +99,21 @@ PG.NetPlayer.prototype.initUI = function (sx, sy) {
     this.uiLeftPoker.kill();
 
     var style = {font: "20px Arial", fill: "#c8c8c8", align: "center"};
-    if (this.seat == 1) {
+    if (this.seat == 1 || this.seat == 4) {
         this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
         this.uiName.anchor.set(1, 0);
     } else {
         this.uiName = this.game.add.text(sx + 40, sy - 80, '等待玩家加入', style);
         this.uiName.anchor.set(0, 0);
     }
+    /*
+    if (this.seat == 1) {
+        this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
+        this.uiName.anchor.set(1, 0);
+    } else {
+        this.uiName = this.game.add.text(sx + 40, sy - 80, '等待玩家加入', style);
+        this.uiName.anchor.set(0, 0);
+    }*/
 };
 
 

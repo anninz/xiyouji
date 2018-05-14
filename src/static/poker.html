@@ -20,9 +20,9 @@
 <input id="user" type="hidden" value="{{user}}">
 <script>
 (function () {
-    var h = window.innerHeight * 960/window.innerWidth;
-    if (h > 540) h = 540;
-    var game = new Phaser.Game(960, h, Phaser.AUTO, 'game');
+    var h = window.innerHeight * 1280/window.innerWidth;
+    if (h > 720) h = 720;
+    var game = new Phaser.Game(1280, h, Phaser.AUTO, 'game');
     game.state.add('Boot', PG.Boot);
     game.state.add('Preloader', PG.Preloader);
     game.state.add('Login', PG.Login);

@@ -22,8 +22,8 @@ class Room(object):
             rsp.append([t.uid, t.size()])
         return rsp
 
-    def new_table(self):
-        t = Table(RoomManager.gen_table_id(), self)
+    def new_table(self, playerNums, pokerNums):
+        t = Table(RoomManager.gen_table_id(), self, playerNums, pokerNums)
         self.waiting_tables[t.uid] = t
         return t
 
@@ -31,7 +31,7 @@ class Room(object):
         if uid == -1:
             for _, table in self.waiting_tables.items():
                 return table
-            return self.new_table()
+            return self.new_table(3, 1)
         return self.waiting_tables.get(uid)
 
     def on_table_changed(self, table):
