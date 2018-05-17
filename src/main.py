@@ -37,7 +37,7 @@ class Application(tornado.web.Application):
             template_path=os.path.join(BASE_DIR, 'static'),
             static_path=os.path.join(BASE_DIR, 'static'),
             login_url='/',
-            xsrf_cookies=True,
+            xsrf_cookies=False,
             debug=True,
         )
         tornado.options.parse_config_file("server.conf")
@@ -60,4 +60,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
