@@ -20,7 +20,7 @@ def shot_turn(method):
         if socket.player.seat == socket.player.table.whose_turn:
             method(socket, packet)
         else:
-            logger.warning('Player[%d] TURN CHEAT', socket.uid)
+            logger.warning('Player[%d] TURN CHEAT[%d][%d]', socket.uid,socket.player.seat,socket.player.table.whose_turn)
     return wrapper
 
 

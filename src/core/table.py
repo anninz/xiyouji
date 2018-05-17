@@ -20,7 +20,7 @@ class Table(object):
     def __init__(self, uid, room, playerNums, pokerNums):
         self.uid = uid
         self.room = room
-        self.players = [None, None, None, None, None, None, None, None, None, None]
+        self.players: List[int] = []
         self.state = 0  # 0 waiting  1 playing 2 end 3 closed
         self.pokers: List[int] = []
         self.multiple = 1
@@ -42,7 +42,6 @@ class Table(object):
 
         if size == 2 and nth == 1:
             IOLoop.current().call_later(1, self.ai_join, nth=2)
-
         p1 = AiPlayer(11, 'IDIOT-I', self.players[0])
         p1.to_server([Pt.REQ_JOIN_TABLE, self.uid])
 
@@ -68,12 +67,12 @@ class Table(object):
 
         self.state = Table.PLAYING
         #self.pokers = [i for i in range(54)]
-        self.pokers = self.resetCardHeap(1)
+        self.pokers = self.resetCardHeap(self.pokerNums)
         random.shuffle(self.pokers)
         for i in range(len(self.pokers)):
-            self.players[i % 3].hand_pokers.append(self.pokers.pop())
+            self.players[i % self.playerNums].hand_pokers.append(self.pokers.pop())
 
-        self.whose_turn = random.randint(0, 2)
+        self.whose_turn = random.randint(0, self.playerNums-1)
         for p in self.players:
             p.hand_pokers.sort()
             response = [Pt.RSP_DEAL_POKER, self.turn_player.uid, p.hand_pokers]
@@ -99,7 +98,7 @@ class Table(object):
 
     def go_next_turn(self):
         self.whose_turn += 1
-        if self.whose_turn == 3:
+        if self.whose_turn == self.playerNums:
             self.whose_turn = 0
 
     @property
@@ -114,11 +113,8 @@ class Table(object):
     def on_join(self, player):
         if self.is_full():
             logger.error('Player[%d] JOIN Table[%d] FULL', player.uid, self.uid)
-        for i, p in enumerate(self.players):
-            if not p:
-                player.seat = i
-                self.players[i] = player
-                break
+        player.seat = len(self.players)
+        self.players.append(player)
         self.sync_table()
 
     def on_leave(self, player):

@@ -296,7 +296,7 @@ PG.Player.prototype.removeAPoker = function (pid) {
 PG.Player.prototype.findAPoker = function (pid) {
     var poker = this._pokerPic[pid];
     if (poker === undefined) {
-        console.log('Error: FIND POKER ', pid);
+        console.log('Error: FIND POKER ', pid , this._pokerPic);
     }
     return poker;
 };

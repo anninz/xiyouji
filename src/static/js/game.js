@@ -14,8 +14,8 @@ PG.Game = function(game) {
 
     this.lastShotPlayer = null;
 
-    this.PlayedCardX = 185;
-    this.PlayedCardY = 105;
+    this.PlayedCardX = 200;
+    this.PlayedCardY = 400;
 
     this.whoseTurn = 0;
 };
@@ -85,12 +85,12 @@ PG.Game.prototype = {
                 }
                 this.titleBar.text = '房间:' + this.tableId;
                 var playerIds = packet[2];
-                //console.log('RSP_JOIN_TABLE  '+ this.playerNums + '-----' + this.pokerNums +'----'+playerIds);
+                console.log('RSP_JOIN_TABLE  '+ this.playerNums + '-----' + this.pokerNums +'----'+playerIds);
                 for (var i = 0; i < playerIds.length; i++) {
                     if (playerIds[i][0] == this.players[0].uid) {
-                        for (var j = 1; j < this.playerNums; j++) {
+                        for (var j = 1; j < playerIds.length; j++) {
                         //console.log('RSP_JOIN_TABLE  '+ ((i+ j)%this.playerNums));
-                          var info_1 = playerIds[(i+ j)%this.playerNums];
+                          var info_1 = playerIds[(i+ j)%playerIds.length];
                           this.players[j].updateInfo(info_1[0], info_1[1]);
                         }
 
@@ -186,14 +186,15 @@ PG.Game.prototype = {
         }*/
         length = pokers.length
         for (var i = 0; i < length; i++) {
-            this.players[2].pokerInHand.push(54);
-            this.players[1].pokerInHand.push(54);
+            for (var j = 1; j < this.playerNums; j++) {
+                this.players[j].pokerInHand.push(54);
+            }
             this.players[0].pokerInHand.push(pokers.pop());
         }
 
-        this.players[0].dealPoker();
-        this.players[1].dealPoker();
-        this.players[2].dealPoker();
+        for (var i = 0; i < this.playerNums; i++) {
+            this.players[i].dealPoker();
+        }
         //this.game.time.events.add(1000, function() {
         //    this.send_message([PG.Protocol.REQ_CHEAT, this.players[1].uid]);
         //    this.send_message([PG.Protocol.REQ_CHEAT, this.players[2].uid]);
@@ -287,7 +288,7 @@ PG.Game.prototype = {
                  p.bringToTop();
                  this.PlayedCardX += gap;
                  if (this.PlayedCardX > this.game.world.width*0.8) {
-                   this.PlayedCardX = 85;
+                   this.PlayedCardX = 200;
                    this.PlayedCardY += 185;
                  }
                  this.game.add.tween(p).to({ x: this.PlayedCardX, y: this.PlayedCardY}, 500, Phaser.Easing.Default, true);
@@ -307,7 +308,7 @@ PG.Game.prototype = {
             turnPlayer.arrangePoker();
         }
         if (turnPlayer.pokerInHand.length > 0) {
-            this.whoseTurn = (this.whoseTurn + 1) % 3;
+            this.whoseTurn = (this.whoseTurn + 1) % this.playerNums;
             if (this.whoseTurn == 0) {
                 this.game.time.events.add(1000, this.startPlay, this);
             }
@@ -480,7 +481,7 @@ PG.Game.prototype = {
             return;
         }
 
-        this.send_message([PG.Protocol.REQ_NEW_TABLE, this.inputPlayerNums.value, this.inputPokerNums.value]);
+        this.send_message([PG.Protocol.REQ_NEW_TABLE, Number(this.inputPlayerNums.value), Number(this.inputPokerNums.value)]);
         /*var httpRequest = new XMLHttpRequest();
         var that = this;
         httpRequest.onreadystatechange = function () {
