@@ -72,4 +72,3 @@ class AiPlayer(Player):
         packet = [Pt.REQ_SHOT_POKER, pokers]
         # IOLoop.current().add_callback(self.to_server, packet)
         IOLoop.current().call_later(2, self.to_server, packet)
-

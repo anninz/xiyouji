@@ -45,12 +45,16 @@ def compare_poker_1(cardA, cardB):
     typeB = get_poker_attr(cardB)
 
     if typeA == typeB:
-        return cardA - cardA
+        return (cardA - cardB) > 0
 
-    if typeB == 3 and typeA != 2:
+    elif typeB == 3 and typeA != 2:
         return 1
 
-    if typeB == 1 and typeA != 3:
+    elif typeB == 1:
+        if typeA != 3 and typeA != 1:
+            return 1
+
+    elif typeA > typeB:
         return 1
 
     return 0
@@ -82,9 +86,9 @@ def cards_above(hand_pokers, turn_pokers):
 def _to_cards(pokers):
     cards = []
     for p in pokers:
-        if p == 52:
+        if p == 53:
             cards.append('W')
-        elif p == 53:
+        elif p == 52:
             cards.append('w')
         else:
             cards.append('A234567890JQK'[p % 13])
@@ -93,9 +97,9 @@ def _to_cards(pokers):
 
 def _to_poker(card):
     if card == 'W':
-        return [52]
-    if card == 'w':
         return [53]
+    if card == 'w':
+        return [52]
 
     cards = 'A234567890JQK'
     for i, c in enumerate(cards):
@@ -131,7 +135,6 @@ def compare_poker(a_pokers, b_pokers):
 
     a_card_type, a_card_value, a_card_type1  = _cards_value(_to_cards(a_pokers))
     b_card_type, b_card_value, b_card_type1  = _cards_value(_to_cards(b_pokers))
-    print (a_card_type, a_card_value, a_card_type1,b_card_type, b_card_value, b_card_type1  )
 
     if a_card_type == b_card_type:
         return compare_poker_1(a_card_value, b_card_value)

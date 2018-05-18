@@ -2,6 +2,7 @@
 PG.NetPlayer = function (seat, game) {
     PG.Player.call(this, seat, game);
     this._pokerPic = [];
+    this.score = 0;
 };
 
 PG.NetPlayer.prototype = Object.create(PG.Player.prototype);
@@ -93,19 +94,7 @@ PG.NetPlayer.prototype.dealPokerAnim = function (p, i) {
 
 PG.NetPlayer.prototype.initUI = function (sx, sy) {
     PG.Player.prototype.initUI.call(this, sx, sy);
-    var style = {font: "22px Arial", fill: "#ffffff", align: "center"};
-    this.uiLeftPoker = this.game.add.text(sx, sy + PG.PH + 10, '17', style);
-    this.uiLeftPoker.anchor.set(0.5, 0);
-    this.uiLeftPoker.kill();
 
-    var style = {font: "20px Arial", fill: "#c8c8c8", align: "center"};
-    if (this.seat == 1 || this.seat == 4) {
-        this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
-        this.uiName.anchor.set(1, 0);
-    } else {
-        this.uiName = this.game.add.text(sx + 40, sy - 80, '等待玩家加入', style);
-        this.uiName.anchor.set(0, 0);
-    }
     /*
     if (this.seat == 1) {
         this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
@@ -119,11 +108,15 @@ PG.NetPlayer.prototype.initUI = function (sx, sy) {
 
 PG.NetPlayer.prototype.updateInfo = function (uid, name) {
     PG.Player.prototype.updateInfo.call(this, uid, name);
-    if (uid == -1) {
+    /*if (uid == -1) {
         this.uiName.text = '等待玩家加入';
     } else {
         this.uiName.text = name;
-    }
+    }*/
+};
+
+PG.NetPlayer.prototype.updateScore = function (score) {
+    PG.Player.prototype.updateScore.call(this, score);
 };
 
 PG.NetPlayer.prototype.updateLeftPoker = function () {

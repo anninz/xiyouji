@@ -41,9 +41,9 @@ PG.Poker.toCards = function (pokers) {
         if (pid instanceof Array) {
             pid = pid[0];
         }
-        if (pid == 52) {
+        if (pid == 53) {
             cards.push('W');
-        } else if (pid == 53) {
+        } else if (pid == 52) {
             cards.push('w');
         } else {
             cards.push("A234567890JQK"[pid % 13]);
@@ -56,7 +56,6 @@ PG.Poker.toCards = function (pokers) {
 PG.Poker.canCompare = function (pokersA, pokersB) {
     var cardsA = this.toCards(pokersA);
     var cardsB = this.toCards(pokersB);
-    console.log('canCompare', cardsA, cardsB);
     return PG.Rule.cardsValue(cardsA)[0] == PG.Rule.cardsValue(cardsB)[0];
 };
 
@@ -95,7 +94,6 @@ PG.Rule = {};
 
 PG.Rule.cardsAbove = function (handCards, turnCards) {
 
-  console.log('cardsAbove handCards = ', handCards, ' turnValue  = ', turnValue);
     var turnValue = this.cardsValue(turnCards);
     if (turnValue[0] == '') {
         return '';
@@ -105,9 +103,7 @@ PG.Rule.cardsAbove = function (handCards, turnCards) {
     //console.log('cardsAbove', handCards, turnCards, turnValue[0],turnValue[1],oneRule);
     for (var i = 0; i < oneRule.length; i++) {
       var valueA = this.cardsValue(oneRule[i]);
-      console.log('cardsAbove', valueA, turnValue);
       if (this.compare_poker_1(valueA,turnValue)) {
-         console.log('cardsAbove', valueA[1] , turnValue[1]);
         if (this.containsAll(handCards, oneRule[i])) {
             return oneRule[i];
         }
@@ -140,10 +136,8 @@ PG.Rule.bestShot = function (handCards) {
     handCards.sort(this.sorter);
     var shot = '';
     var len = this._CardsType.length;
-    console.log('bestShot', handCards);
     for (var i = 0; i < len; i++) {
         var oneRule = PG.RuleList[this._CardsType[i]];
-        console.log('cardsAbove oneRule = ', oneRule);
         for (var j = 0; j < oneRule.length; j++) {
             if (oneRule[j].length > shot.length && this.containsAll(handCards, oneRule[j])) {
                 shot = oneRule[j];
@@ -175,7 +169,6 @@ PG.Rule.sorter = function (a, b) {
 };
 
 PG.Rule.index_of = function (array, ele) {
-  console.log('index_of array[0] = ', array[0] , ' ele = ', ele);
     if (array[0].length != ele.length) {
         return -1;
     }
@@ -217,9 +210,7 @@ PG.Rule.cardsValue = function (cards) {
         var typeName = this._CardsType[i];
         //console.log('socket connect onerror',PG.RuleList[typeName],cards);
         var index = this.index_of(PG.RuleList[typeName], cards);
-         console.log('cardsValue 0 cards = ', cards , ' index = ', index, ' name = ',typeName);
         if (index >= 0) {
-          console.log('cardsValue cards = ', cards , ' index = ', index);
           return [typeName, index, this.get_cards_attr(index)];
         }
     }
@@ -266,8 +257,10 @@ PG.Rule.compare_poker_1 = function (valueA, valueB) {
       return 1;
   } else if(valueB[2] == 3 && valueA[2] != 2) {
       return 1;
-  } else if(valueB[2] == 1 && valueA[2] != 3) {
-      return 1;
+  } else if(valueB[2] == 1) {
+      if (valueA[2] != 3 && valueA[2] != 1) {
+          return 1;
+      }
   } else if (valueA[2] > valueB[2]) {
       return 1;
   }

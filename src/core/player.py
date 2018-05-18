@@ -69,9 +69,11 @@ class Player(object):
                 return
 
         self.table.go_next_turn()
+        a_card_type, a_card_value, a_card_type1  = rule._cards_value(rule._to_cards(pokers))
+        if a_card_type1 != 6:
+            self.table.last_shot_poker = pokers
         if pokers:
             self.table.last_shot_seat = self.seat
-            self.table.last_shot_poker = pokers
             for p in pokers:
                 self.hand_pokers.remove(p)
 

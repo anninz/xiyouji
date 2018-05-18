@@ -10,12 +10,13 @@ PG.Game = function(game) {
 
     this.tablePoker = [];//最后三张牌
     this.tablePokerPic = {};
+    this.lastValidPoker = null;
     this.lastPoker = null;
 
     this.lastShotPlayer = null;
 
     this.PlayedCardX = 200;
-    this.PlayedCardY = 400;
+    this.PlayedCardY = 350;
 
     this.whoseTurn = 0;
 };
@@ -108,7 +109,10 @@ PG.Game.prototype = {
                 this.dealPoker(pokers);
                 this.whoseTurn = this.uidToSeat(playerId);
 		            this.lastShotPlayer = this.players[this.whoseTurn];
-		            this.startPlay()
+                this.lastValidPoker = null;
+                if (this.whoseTurn == 0) {
+                    this.startPlay();
+                }
                 //this.startCallScore(0);
                 break;
             case PG.Protocol.RSP_CALL_SCORE:
@@ -168,7 +172,7 @@ PG.Game.prototype = {
 	},
 
 	uidToSeat: function (uid) {
-	    for (var i = 0; i < 3; i++) {
+	    for (var i = 0; i < this.players.length; i++) {
 	        if (uid == this.players[i].uid)
 	            return i;
 	    }
@@ -255,6 +259,18 @@ PG.Game.prototype = {
         var pokers = packet[2];
         if (pokers.length == 0) {
             this.players[this.whoseTurn].say("不出");
+            var length = this.tablePoker.length;
+            for (var i = 0; i < length; i++) {
+                var p = this.tablePoker.pop();
+                 p.kill();
+                 p.destroy();
+            }
+            this.players[this.whoseTurn].updateScore(length);
+            this.tablePoker = [];
+            this.lastValidPoker = null;
+            this.PlayedCardX = 200;
+            this.PlayedCardY = 350;
+            this.whoseTurn = this.whoseTurn++ % this.players.length;
         } else {
 /*            var pokersPic = {};
             pokers.sort(PG.Poker.comparePoker);
@@ -295,15 +311,21 @@ PG.Game.prototype = {
 
                  turnPlayer.removeAPoker(pokers[i]);
                  pokersPic[p.id] = p;
+                 this.tablePoker.push(p);
             }
-            this.tablePoker = (pokers);
+            /*for (var i = 0; i < pokers.length; i++) {
+              this.tablePoker.push(pokers[i]);
+            }*/
+            //this.tablePoker = (pokers);
             //this.tablePokerPic.push(pokersPic);
+
+            this.lastPoker = pokers;
             this.lastShotPlayer = turnPlayer;
 
             var cardsA = PG.Poker.toCards(pokers);
             var valueA = PG.Rule.cardsValue(cardsA);
             if (valueA[2] != 6) {
-              this.lastPoker = pokers
+              this.lastValidPoker = pokers
             }
             turnPlayer.arrangePoker();
         }
@@ -351,7 +373,7 @@ PG.Game.prototype = {
         if (this.isLastShotPlayer()) {
             this.players[0].playPoker([]);
         } else {
-            this.players[0].playPoker(this.tablePoker);
+            this.players[0].playPoker(this.lastValidPoker);
         }
     },
 
@@ -360,7 +382,7 @@ PG.Game.prototype = {
     },
 
     isLastShotPlayer: function() {
-        return this.players[this.whoseTurn] == this.lastShotPlayer;
+        return this.players[this.whoseTurn] == this.lastShotPlayer || this.tablePoker.length == 0;
     },
 
     createTableLayer: function (tables) {

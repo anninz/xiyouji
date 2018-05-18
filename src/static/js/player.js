@@ -32,20 +32,53 @@ PG.Player = function (seat, game) {
 
     this.hintPoker = [];
     this.isDraging = false;
+
+    this.score = 0;
 };
 
 PG.Player.prototype.initUI = function (sx, sy) {
     this.uiHead = this.game.add.sprite(sx, sy, 'btn', 'icon_default.png');
     this.uiHead.anchor.set(0.5, 1);
+
+    var style1 = {font: "22px Arial", fill: "#ffffff", align: "center"};
+
+    var style = {font: "20px Arial", fill: "#c8c8c8", align: "center"};
+    if (this.seat == 1 || this.seat == 4) {
+        this.uiLeftPoker = this.game.add.text(sx - 60, sy + 20, '17', style1);
+        this.uiLeftPoker.anchor.set(1, 0);
+        this.uiLeftPoker.kill();
+
+        this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
+        this.uiName.anchor.set(1, 0);
+        this.uiScore = this.game.add.text(sx - 40, sy - 20, '分数:0', style);
+        this.uiScore.anchor.set(1, 0);
+    } else {
+        this.uiLeftPoker = this.game.add.text(sx + 60, sy + 20, '17', style1);
+        this.uiLeftPoker.anchor.set(0, 0);
+        this.uiLeftPoker.kill();
+
+        this.uiName = this.game.add.text(sx + 40, sy - 80, '等待玩家加入', style);
+        this.uiName.anchor.set(0, 0);
+        this.uiScore = this.game.add.text(sx + 40, sy - 20, '分数:0', style);
+        this.uiScore.anchor.set(0, 0);
+    }
 };
 
 PG.Player.prototype.updateInfo = function (uid, name) {
     this.uid = uid;
     if (uid == -1) {
         this.uiHead.frameName = 'icon_default.png';
+        this.uiName.text = '等待玩家加入';
     } else {
         this.uiHead.frameName = 'icon_farmer.png';
+        this.uiName.text = name;
     }
+};
+
+PG.Player.prototype.updateScore = function (score) {
+    this.score += score;
+    this.uiScore.text = '分数:'+ this.score;
+    this.uiScore.revive();
 };
 
 PG.Player.prototype.initShotLayer = function () {
@@ -153,7 +186,7 @@ PG.Player.prototype.onShot = function (btn) {
     if (this.hintPoker.length == 0) {
         return;
     }
-    var code = this.canPlay(this.game.isLastShotPlayer() ? [] : this.game.lastPoker, this.hintPoker);
+    var code = this.canPlay(this.game.isLastShotPlayer() ? [] : this.game.lastValidPoker, this.hintPoker);
     if (code) {
         this.say(code);
         return;
@@ -169,7 +202,6 @@ PG.Player.prototype.onShot = function (btn) {
 PG.Player.prototype.hint = function (lastTurnPoker) {
     var cards;
     var handCards = PG.Poker.toCards(this.pokerInHand);
-    console.log('rototype.hint lastTurnPoker = ', lastTurnPoker);
     if (lastTurnPoker.length === 0) {
         cards = PG.Rule.bestShot(handCards);
     } else {
@@ -183,33 +215,38 @@ PG.Player.prototype.canPlay = function (lastTurnPoker, shotPoker) {
     if (lastTurnPoker == null) {
         return '';
     }
-    console.log('canPlay A ', shotPoker);
     var cardsA = PG.Poker.toCards(shotPoker);
-    console.log('canPlay A 1 ', cardsA);
     var valueA = PG.Rule.cardsValue(cardsA);
+    console.log('canPlay++++++++++ cardsA = ',cardsA,' valueA = ', valueA, ' shotPoker = ',shotPoker);
     if (!valueA[0]){
         return '出牌不合法';
     }
-    console.log('canPlay B ', lastTurnPoker);
     var cardsB = PG.Poker.toCards(lastTurnPoker);
-    console.log('canPlay B cardsB = ', cardsB);
     if (cardsB.length == 0) {
         return '';
     }
     var valueB = PG.Rule.cardsValue(cardsB);
+    console.log('canPlay--------- cardsB = ',cardsB,' valueB = ' ,valueB, ' lastTurnPoker = ',lastTurnPoker);
     if (valueA[0] != valueB[0] && valueA[1] < 1000) {
         return '出牌类型跟上家不一致';
     }
-
-    if (valueA[2] == valueB[2] && valueA[1] > valueB[1]) {
+    var result = PG.Rule.compare_poker_1(valueA, valueB);
+    if (result) {
+      return '';
+    }
+    /*if (valueA[2] == valueB[2] && valueA[1] > valueB[1]) {
+        console.log('canPlay  1');
         return '';
     } else if(valueB[2] == 3 && valueA[2] != 2) {
+        console.log('canPlay  2');
         return '';
-    } else if(valueB[2] == 1 && valueA[2] != 3) {
+    } else if(valueB[2] == 1 && valueA[2] != 3 && valueA[2] != 1) {
+        console.log('canPlay  3');
         return '';
     } else if (valueA[2] > valueB[2]) {
+        console.log('canPlay  4');
         return '';
-    }
+    }*/
     console.log('Error: UNKNOWN TYPE ', valueA,valueB);
     return '出牌需要大于上家';
 };
