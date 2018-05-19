@@ -81,20 +81,21 @@ PG.NetPlayer.prototype.dealPokerAnim = function (p, i) {
     var width = this.game.world.width;
     if (p.id > 53) {
         this.game.add.tween(p).to({
-            x: this.seat == 1 ? width - PG.PW/2 : PG.PW/2,
-            y: this.seat == 1 ? this.uiHead.y + PG.PH/2 + 10 : this.uiHead.y + PG.PH/2 + 10
+            x: this.sx,
+            y: this.uiHead.y + PG.PH/2 + 10
         }, 500, Phaser.Easing.Default, true, 25 + 50 * i);
     } else {
         this.game.add.tween(p).to({
-            x: this.seat == 1 ? (width - PG.PW/2) - (i * PG.PW * 0.44) : PG.PW/2 + i * PG.PW * 0.44,
-            y: this.seat == 1 ? this.uiHead.y + PG.PH/2 + 10 : this.uiHead.y + PG.PH * 1.5 + 20
+            x: this.sx,
+            y: this.uiHead.y + PG.PH * 1.5 + 20
         }, 500, Phaser.Easing.Default, true, 50 * i);
     }
 };
 
 PG.NetPlayer.prototype.initUI = function (sx, sy) {
     PG.Player.prototype.initUI.call(this, sx, sy);
-
+    this.sx = sx;
+    this.sy = sy;
     /*
     if (this.seat == 1) {
         this.uiName = this.game.add.text(sx - 40, sy - 80, '等待玩家加入', style);
@@ -106,8 +107,8 @@ PG.NetPlayer.prototype.initUI = function (sx, sy) {
 };
 
 
-PG.NetPlayer.prototype.updateInfo = function (uid, name) {
-    PG.Player.prototype.updateInfo.call(this, uid, name);
+PG.NetPlayer.prototype.updateInfo = function (uid, name, realseat) {
+    PG.Player.prototype.updateInfo.call(this, uid, name, realseat);
     /*if (uid == -1) {
         this.uiName.text = '等待玩家加入';
     } else {

@@ -96,6 +96,12 @@ class Player(object):
             self.table.on_leave(self)
         # self.table = None
 
+    def on_game_over(self):
+        self.ready = False
+
+    def on_replay(self):
+        self.ready = True
+
     def __repr(self):
         return self.__str__()
 

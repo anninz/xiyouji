@@ -92,7 +92,7 @@ PG.Game.prototype = {
                         for (var j = 1; j < playerIds.length; j++) {
                         //console.log('RSP_JOIN_TABLE  '+ ((i+ j)%this.playerNums));
                           var info_1 = playerIds[(i+ j)%playerIds.length];
-                          this.players[j].updateInfo(info_1[0], info_1[1]);
+                          this.players[j].updateInfo(info_1[0], info_1[1], info_1[2]);
                         }
 
                         /*var info_1 = playerIds[(i+1)%3];
@@ -109,7 +109,7 @@ PG.Game.prototype = {
                 this.dealPoker(pokers);
                 this.whoseTurn = this.uidToSeat(playerId);
 		            this.lastShotPlayer = this.players[this.whoseTurn];
-                this.lastValidPoker = null;
+                this.lastValidPoker = [];
                 if (this.whoseTurn == 0) {
                     this.startPlay();
                 }
@@ -154,7 +154,29 @@ PG.Game.prototype = {
                 this.whoseTurn = this.uidToSeat(winner);
                 function gameOver() {
                     alert(this.players[this.whoseTurn].isLandlord ? "帅的赢" : "漂亮的赢");
-                    this.state.start('MainMenu');
+                    //this.state.start('MainMenu');
+
+                    for (var i = 0; i < this.playerNums; i++) {
+                        var player = this.players[i];
+                        length = player.pokerInHand.length;
+                        for (var j = 0; j < length; j++) {
+                            pid = player.pokerInHand[j]
+                            p = player.findAPoker(pid);
+                            player.removeAPoker(pid);
+                            if (p) {
+                              p.kill();
+                              p.destroy();
+                            }
+                        }
+                        var length = this.tablePoker.length;
+                        for (var i = 0; i < length; i++) {
+                            var p = this.tablePoker.pop();
+                             p.kill();
+                             p.destroy();
+                        }
+                        player.pokerInHand = [];
+                    }
+                    this.send_message([PG.Protocol.REQ_CHEAT, this.tableId]);
                 }
                 this.game.time.events.add(1000, gameOver, this);
                 break;
@@ -188,12 +210,27 @@ PG.Game.prototype = {
             //this.tablePoker[i] = p.id;
             //this.tablePoker[i + 3] = p;
         }*/
-        length = pokers.length
-        for (var i = 0; i < length; i++) {
+
+        totalNums = this.pokerNums * 38;
+        lefts = totalNums % this.playerNums;
+        baseNums = (totalNums-lefts) / this.playerNums;
+        length = pokers.length;
+
+  	    console.log('dealPoker_____totalNums______lefts___baseNums_______length_______________________' + totalNums + '  ' + lefts + '  ' + baseNums + '  ' + length);
+        for (var i = 0; i < baseNums; i++) {
             for (var j = 1; j < this.playerNums; j++) {
                 this.players[j].pokerInHand.push(54);
             }
             this.players[0].pokerInHand.push(pokers.pop());
+        }
+        if (length > baseNums) {
+          this.players[0].pokerInHand.push(pokers.pop());
+        }
+        for (var j = 1; j < this.playerNums; j++) {
+          	    console.log('realseat____' + this.players[j].realseat);
+          if (this.players[j].realseat < lefts) {
+            this.players[j].pokerInHand.push(54);
+          }
         }
 
         for (var i = 0; i < this.playerNums; i++) {
@@ -267,7 +304,7 @@ PG.Game.prototype = {
             }
             this.players[this.whoseTurn].updateScore(length);
             this.tablePoker = [];
-            this.lastValidPoker = null;
+            this.lastValidPoker = [];
             this.PlayedCardX = 200;
             this.PlayedCardY = 350;
             this.whoseTurn = this.whoseTurn++ % this.players.length;

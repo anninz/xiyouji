@@ -127,9 +127,15 @@ class SocketHandler(WebSocketHandler):
             self.player.table.handle_chat(self.player, packet[1])
 
     def handle_cheat(self, uid):
-        for p in self.player.table.players:
-            if p.uid == uid:
-                self.player.send([Pt.RSP_CHEAT, p.uid, p.hand_pokers])
+        #table = self.room.replay(uid)
+        self.player.on_replay()
+        if self.player.table.is_all_ready():
+            self.player.table.deal_poker()
+            #self.room.on_table_changed(table)
+            logger.info('TABLE[%s] GAME BEGIN[%s]', self.player.table.uid, self.player.table.players)
+        #for p in self.player.table.players:
+            #if p.uid == uid:
+                #self.player.send([Pt.RSP_CHEAT, p.uid, p.hand_pokers])
 
     def write_message(self, message, binary=False):
         if self.ws_connection is None:

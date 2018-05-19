@@ -42,6 +42,11 @@ class Room(object):
             self.playing_tables.pop(table.uid, None)
             self.waiting_tables[table.uid] = table
 
+    def replay(self, uid):
+        table = self.playing_tables.pop(uid, None)
+        self.waiting_tables[uid] = table
+        return table;
+
     @property
     def waiting_tables(self):
         return self.__waiting_tables

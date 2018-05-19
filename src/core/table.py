@@ -53,7 +53,7 @@ class Table(object):
         ps = []
         for p in self.players:
             if p:
-                ps.append((p.uid, p.name))
+                ps.append((p.uid, p.name, p.seat))
             else:
                 ps.append((-1, ''))
         response = [Pt.RSP_JOIN_TABLE, self.uid, ps, (self.playerNums, self.pokerNums)]
@@ -123,6 +123,15 @@ class Table(object):
                 self.players[i] = None
                 break
 
+    def is_all_ready(self):
+        counts = 0
+        for p in self.players:
+            if p.ready:
+                counts = counts + 1
+        if counts == self.playerNums:
+            return True
+        return False
+
     def on_game_over(self, winner):
         if winner.hand_pokers:
             return
@@ -133,6 +142,7 @@ class Table(object):
                 if pp != p:
                     response.append([pp.uid, *pp.hand_pokers])
             p.send(response)
+            p.on_game_over()
         # TODO deduct coin from database
         # TODO store poker round to database
         logger.info('Table[%d] GameOver[%d]', self.uid, self.uid)

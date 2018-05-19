@@ -1,7 +1,7 @@
 PG.createPlay = function (seat, game) {
     var player = seat == 0 ? new PG.Player(seat, game) : new PG.NetPlayer(seat, game);
     var xy = [
-        PG.PW / 2, game.world.height - PG.PH + 40,
+        PG.PW / 2, game.world.height - PG.PH + 80,
         game.world.width - PG.PW / 2, 110,
         PG.PW / 2, 110,
         game.world.width - 630, 110,
@@ -64,7 +64,7 @@ PG.Player.prototype.initUI = function (sx, sy) {
     }
 };
 
-PG.Player.prototype.updateInfo = function (uid, name) {
+PG.Player.prototype.updateInfo = function (uid, name, realseat) {
     this.uid = uid;
     if (uid == -1) {
         this.uiHead.frameName = 'icon_default.png';
@@ -72,6 +72,7 @@ PG.Player.prototype.updateInfo = function (uid, name) {
     } else {
         this.uiHead.frameName = 'icon_farmer.png';
         this.uiName.text = name;
+        this.realseat = realseat;
     }
 };
 

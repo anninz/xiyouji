@@ -53,6 +53,8 @@ class AiPlayer(Player):
         elif code == Pt.RSP_GAME_OVER:
             winner = packet[1]
             coin = packet[2]
+            packet = [Pt.REQ_CHEAT, self.table.uid]
+            IOLoop.current().add_callback(self.to_server, packet)
         else:
             logger.info('AI ERROR PACKET: %s', packet)
 
